@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ShaktiPay</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #f4791f; }
+        .request-card { background: #fafafa; border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+        .btn-approve { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-reject { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>👑 Admin Panel (Pending Requests)</h2>
+        <div id="requestsList">Loading requests...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCxU0-aRs0qnjrsdiTR5lojxnen8PwsxfU",
+          authDomain: "shakti-pay.firebaseapp.com",
+          databaseURL: "https://shakti-pay-default-rtdb.firebaseio.com",
+          projectId: "shakti-pay",
+          storageBucket: "shakti-pay.firebasestorage.app",
+          messagingSenderId: "603174782279",
+          appId: "1:603174782279:web:6220300ba1c4aff3597862"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const requestsRef = ref(database, 'deposit_requests');
+
+        // Fetch Pending Requests
+        onValue(requestsRef, (snapshot) => {
+            const listDiv = document.getElementById('requestsList');
+            listDiv.innerHTML = '';
+            let hasPending = false;
+
+            snapshot.forEach((childSnapshot) => {
+                const reqId = childSnapshot.key;
+                const data = childSnapshot.val();
+
+                if(data.status === "Pending") {
+                    hasPending = true;
+                    listDiv.innerHTML += `
+                        <div class="request-card">
+                            <p><strong>User:</strong> ${data.username}</p>
+                            <p><strong>Amount:</strong> ₹${data.amount}</p>
+                            <p><strong>UTR:</strong> ${data.utr}</p>
+                            <button class="btn-approve" onclick="approvePayment('${reqId}', '${data.username}', ${data.amount})">✅ Approve</button>
+                            <button class="btn-reject" onclick="rejectPayment('${reqId}')">❌ Reject</button>
+                        </div>
+                    `;
+                }
+            });
+
+            if(!hasPending) listDiv.innerHTML = '<p style="text-align:center;">No pending requests!</p>';
+        });
+
+        // Approve Function
+        window.approvePayment = async function(reqId, username, amount) {
+            const confirmApprove = confirm(`Are you sure you received ₹${amount}?`);
+            if(!confirmApprove) return;
+
+            // 1. Mark request as Success
+            await update(ref(database, `deposit_requests/${reqId}`), { status: "Success" });
+
+            // 2. Add Money to User Balance
+            const userRef = ref(database, `users/${username}`);
+            const userSnapshot = await get(userRef);
+            let currentBalance = 0;
+            
+            if(userSnapshot.exists() && userSnapshot.val().balance) {
+                currentBalance = userSnapshot.val().balance;
+            }
+            
+            let newBalance = currentBalance + amount;
+            await update(userRef, { balance: newBalance });
+
+            alert("✅ Payment Approved! Balance added to user's wallet.");
+        }
+
+        // Reject Function
+        window.rejectPayment = async function(reqId) {
+            const confirmReject = confirm("Are you sure you want to reject this?");
+            if(!confirmReject) return;
+
+            await update(ref(database, `deposit_requests/${reqId}`), { status: "Rejected" });
+            alert("❌ Payment Rejected!");
+        }
+    </script>
+</body>
+</html>
